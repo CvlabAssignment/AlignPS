@@ -111,6 +111,8 @@ def main():
         raise ValueError('The output file must be a pkl file.')
 
     cfg = Config.fromfile(args.config)
+
+
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # import modules from string list.
@@ -146,11 +148,15 @@ def main():
         init_dist(args.launcher, **cfg.dist_params)
 
     # build the dataloader
+    print('yes')
     samples_per_gpu = cfg.data.test.pop('samples_per_gpu', 1)
     if samples_per_gpu > 1:
         # Replace 'ImageToTensor' to 'DefaultFormatBundle'
         cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
+
     dataset = build_dataset(cfg.data.test)
+
+
     #dataset.load_query()
     data_loader = build_dataloader(
         dataset,
@@ -185,7 +191,8 @@ def main():
             broadcast_buffers=False)
         outputs = multi_gpu_test(model, data_loader, args.tmpdir,
                                  args.gpu_collect)
-
+    print('outputs',outputs)
+    print('out', args.out)
     rank, _ = get_dist_info()
     if rank == 0:
         if args.out:

@@ -55,150 +55,149 @@ def load_image_index(root_dir, db_name):
 
 if __name__ == "__main__":
     db_name = "psdb_test"
-    root_dir = '/home/jx1/yy1/data/CUHK-SYSU'
+    # root_dir = '~/Downloads/WRCAN-PyTorch/src/image'
 
-    with open('/home/jx1/yy1/data/anno/cuhk-sysu/test_new.json', 'r') as fid:
+    # images_path = '/home/cvlab3/Downloads/WRCAN-PyTorch/src/images_cam/'
+
+
+    root_dir = '/home/cvlab3/Downloads/AlignPS/demo/anno/kist/'
+
+    with open('/home/cvlab3/Downloads/AlignPS/demo/anno/kist/test_new.json', 'r') as fid:
         test_det = json.load(fid)
+
+
+
+
     id_to_img = dict()
     img_to_id = dict()
+
+    img_num = 0
     for td in test_det['images']:
         im_name = td['file_name'].split('/')[-1]
         im_id = td['id']
         id_to_img[im_id] = im_name
         img_to_id[im_name] = im_id
+        img_num += 1
 
-    results_path = '/home/yy1/2021/AlignPS/work_dirs/' + sys.argv[1]
+    # print('0 img',id_to_img[0])
+    # print(len(id_to_img))
+    # image_file_names = os.listdir(images_path)
+    # id_to_img = dict()
+    # img_to_id = dict()
+    #
+    #
+    # for idx, f in enumerate(image_file_names):
+    #     _, frame_no = f.split("|")
+    #     file_name = f
+    #     id_to_img[idx] = file_name
+    #     img_to_id[file_name] = idx
+    # print('sys',sys.argv[1])
+    results_path = '/home/cvlab3/Downloads/AlignPS/work_dirs/faster_rcnn_r50_caffe_c4_1x_cuhk_single_two_stage17_6_nae1/'# + sys.argv[1]
     #results_path = '/raid/yy1/mmdetection/work_dirs/fcos_center-normbbox-centeronreg-giou_r50_caffe_fpn_gn-head_dcn_4x4_1x_cuhk_reid_1500_stage1_fpncat_dcn_epoch24_multiscale_focal_x4_bg-2_sub_triqueue_nta_nsa'
     #results_path = '/raid/yy1/mmdetection/work_dirs/fcos_center-normbbox-centeronreg-giou_r50_caffe_fpn_gn-head_4x4_1x_cuhk_reid_1000_fpncat'
-    with open(os.path.join(results_path, 'results_1000.pkl'), 'rb') as fid:
+    # 'results_1000_x1'
+    # x1 = '_x1' #'_x1' ''
+    x1 = '_x1'
+    with open(os.path.join(results_path, 'results_1000{}.pkl'.format(x1)), 'rb') as fid:
         all_dets = pickle.load(fid)
 
+    # print(all_dets[0])
     gallery_dicts1 = {}
-    gallery_dicts2 = {}
+    # gallery_dicts2 = {}
     all_dets1 = all_dets[0]
-    all_dets2 = all_dets[1]
+    # all_dets2 = all_dets[1]
+    # print(len(all_dets1), len(all_dets2))
+    num = 0
     for i, dets in enumerate(all_dets1):
+        # print(i)
+        if i == 646:
+            break
         image_id = i
         gallery_dicts1[image_id] = dict()
+        # print(i)
+
         gallery_dicts1[image_id]['bbox'] = dets[0][:, :4]
         gallery_dicts1[image_id]['scores'] = dets[0][:, 4]
         gallery_dicts1[image_id]['feats'] = dets[0][:, 5:]
+        gallery_dicts1[image_id]['pred_bbox'] = dets[0][:, :4]
 
-    for i, dets in enumerate(all_dets2):
-        image_id = i
-        gallery_dicts2[image_id] = dict()
-        gallery_dicts2[image_id]['bbox'] = dets[:, :4]
-        gallery_dicts2[image_id]['scores'] = dets[:, 4]
-        gallery_dicts2[image_id]['feats'] = dets[:, 5:]
+        r, = dets[0][:, 4].shape
+        list_num = []
+        # img = Image.open('/home/cvlab3/Downloads/WRCAN-PyTorch/src/images{}_cam/'.format(x1) + id_to_img[i])
+        img = cv2.imread('/home/cvlab3/Downloads/WRCAN-PyTorch/src/images{}_cam/'.format(x1) + id_to_img[i])
+        for k in range(r):
+            if gallery_dicts1[image_id]['scores'][k] > 0.2:
+                # print('bbox',gallery_dicts1[image_id]['bbox'][i])
 
-    gallery_dicts3 = dict()
-    for key, val in gallery_dicts1.items():
-        gallery_dicts3[key] = dict()
-        gallery_dicts3[key]['bbox'] = val['bbox']
-        gallery_dicts3[key]['scores'] = val['scores']
-        gallery_dicts3[key]['feats'] = np.concatenate((normalize(val['feats'],axis=1), normalize(gallery_dicts2[key]['feats'], axis=1)), axis=1)
+                numbers = gallery_dicts1[image_id]['bbox'][k]
+                # print(numbers)
+                list_num.append(numbers)
 
+                l = int(numbers[0])
+                t = int(numbers[1])
+                r = int(numbers[2])
+                b = int(numbers[3])
+               # print((l,r), (r,b))
+                cv2.rectangle(img, (l,t),(r,b),(0,0,255),3)
+                # print('bbox', (numbers))
+                # cropped_img = img.crop((numbers))
+                # cropped_img.save("/home/cvlab3/Downloads/WRCAN-PyTorch/src/images_modify{}_result/{}_{}.jpeg".format(x1,i,num))
+                num = num +1
+        gallery_dicts1[image_id]['pred_bbox'] = np.array(list_num, dtype=object)
 
-    all_thresh = [0.2, 0.2, 0.2]
-    gallery_dicts_all = [gallery_dicts1, gallery_dicts2, gallery_dicts3]
+        # img.save("/home/cvlab3/Downloads/WRCAN-PyTorch/src/images{}_result/{}_{}.jpeg".format(x1, i, num))
+        cv2.imwrite("/home/cvlab3/Downloads/WRCAN-PyTorch/src/images_modify{}_result/{}_{}.jpeg".format(x1, i, num), img)  # save img
 
-    for thresh, gallery_dicts in zip(all_thresh, gallery_dicts_all):
-        if db_name == "psdb_test":
-            gallery_size= 100
-            test = loadmat(osp.join(root_dir, "annotation/test/train_test/TestG{:d}.mat".format(gallery_size)))
-            test = test["TestG{:d}".format(gallery_size)].squeeze()
-
-            aps = []
-            accs = []
-            topk = [1, 5, 10]
-            for index, item in enumerate(test):
-                # query
-                y_true, y_score = [], []
-                count_gt, count_tp = 0, 0
-
-                im_name = str(item["Query"][0, 0][0][0])
-                query_gt_box = item["Query"][0, 0][1].squeeze().astype(np.int32)
-                query_gt_box[2:] += query_gt_box[:2]
-                query_dict = gallery_dicts[img_to_id[im_name]]
-                query_boxes = query_dict['bbox']
-                iou, iou_max, nmax = get_max_iou(query_boxes, query_gt_box)
-                #print(iou_max)
-                '''
-                if iou_max <= iou_thresh:
-                    query_feat = query_dict['feats'][nmax]
-                    #print("not detected", im_name, iou_max)
-                    #continue
-                else:
-                    iou_good, good_idx = get_good_iou(query_boxes, query_gt_box, iou_thresh)
-                    query_feats = query_dict['feats'][good_idx]
-                    query_feat = iou_good[np.newaxis,:].dot(query_feats) / np.sum(iou_good)
-                    query_feat = query_feat.ravel()
-                '''
-
-                query_feat = query_dict['feats'][nmax]
-                query_feat = normalize(query_feat[np.newaxis,:], axis=1).ravel()
-
-                # gallery
-                gallery = item["Gallery"].squeeze()
-                for im_name, box, _ in gallery:
-                    gallery_imname = str(im_name[0])
-                    gt = box[0].astype(np.int32)
-                    count_gt += gt.size > 0
-                    img_id = img_to_id[gallery_imname]
-                    #if img_id not in gallery_dicts:
-                    #    continue
-                    det = np.asarray(gallery_dicts[img_id]['bbox'])
-                    scores = np.asarray(gallery_dicts[img_id]['scores'])
-                    keep_inds = np.where(scores >= thresh)
-                    scores = scores[keep_inds]
-                    det = det[keep_inds]
-
-                    gallery_feat = gallery_dicts[img_id]['feats'][keep_inds]
-                    if gallery_feat.shape[0] > 0:
-                        gallery_feat = normalize(gallery_feat, axis=1)
-                    else:
-                        continue
-
-                    sim = gallery_feat.dot(query_feat).ravel()
-                    #Class Weighted Similarity
-                    #print(scores)
-                    #sim = sim * scores
-                    label = np.zeros(len(sim), dtype=np.int32)
-
-                    if gt.size > 0:
-                        w, h = gt[2], gt[3]
-                        gt[2:] += gt[:2]
-                        iou_thresh = min(0.5, (w * h * 1.0) / ((w + 10) * (h + 10)))
-                        inds = np.argsort(sim)[::-1]
-                        sim = sim[inds]
-                        det = det[inds]
-                        # only set the first matched det as true positive
-                        for j, roi in enumerate(det[:, :4]):
-                            if compute_iou(roi, gt) >= iou_thresh:
-                                label[j] = 1
-                                count_tp += 1
-                                break
-                    y_true.extend(list(label))
-                    y_score.extend(list(sim))
+        # if gallery_dicts1[image_id]['scores']
+        # cv2.imwrite("/home/cvlab3/Downloads/WRCAN-PyTorch/src/images_result/{}.jpeg".format(i),
+        #         gallery_dicts1[image_id]['bbox'])
 
 
-                y_score = np.asarray(y_score)
-                y_true = np.asarray(y_true)
-                assert count_tp <= count_gt
-                recall_rate = count_tp * 1.0 / count_gt
-                ap = 0 if count_tp == 0 else average_precision_score(y_true, y_score) * recall_rate
-                aps.append(ap)
-                inds = np.argsort(y_score)[::-1]
-                y_score = y_score[inds]
-                y_true = y_true[inds]
-                accs.append([min(1, sum(y_true[:k])) for k in topk])
+    thres = 0.2
 
 
-            print("threshold: ", thresh)
-            print("  mAP = {:.2%}".format(np.mean(aps)))
-            accs = np.mean(accs, axis=0)
-            for i, k in enumerate(topk):
-                print("  Top-{:2d} = {:.2%}".format(k, accs[i]))
+    ap = 0
+    precision = {}
+    recall = {}
+
+    for image_id in range(img_num-1):
+
+        query_box = gallery_dicts1[image_id]['pred_bbox']  # predicted bb
+        query_box = [list(map(int, q)) for q in query_box]
+
+
+        box = [b['bbox'] for b in test_det['annotations'] if b['image_id']==image_id]
+        # boxs.append(box)
+
+
+        query_gt_box =  box
+
+        tp_num = get_max_iou(query_box, query_gt_box)
+
+        # print('tp_num ', tp_num)
+        if (len(query_gt_box) ==0) or (len(query_box)==0):
+            # precision[image_id] = 0
+            # recall = 0
+            continue
+        precision[image_id]=tp_num/len(query_box)
+        recall[image_id]= tp_num/len(query_gt_box)
+        # ap += precision*recall
+    ap_num = 0
+
+    for i in range(img_num-1):
+        # if i+1:
+        # print(precision[i+1],recall[i+1],recall[i])
+        # if (precision[i+1]) and (recall[i+1]) and (recall[i]):
+        try:
+            ap += precision[i+1]*(recall[i+1]-recall[i])
+            ap_num += 1
+        except:
+            pass
+
+
+    map = ap/ap_num
+    print('map',map)
+        # exit()
 
 
 

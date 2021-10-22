@@ -453,9 +453,11 @@ class FCOSReidHeadFocalSubTriQueue3(AnchorFreeHeadReid):
             reid_feat_list = [
                 reid_feats[i][img_id].detach() for i in range(num_levels)
             ]
-            #print(img_metas)
-            img_shape = img_metas[img_id]['img_shape']
-            scale_factor = img_metas[img_id]['scale_factor']
+            # print('1', img_metas)
+            # print('img type',img_metas[0])
+            # img_shape = img_metas[img_id]['img_shape'] img_metas.data[img_id]['img_shape']
+            img_shape = img_metas[0]['img_shape']
+            scale_factor = img_metas[0]['scale_factor']
             det_bboxes = self._get_bboxes_single(cls_score_list,
                                                  bbox_pred_list,
                                                  centerness_pred_list,

@@ -299,6 +299,10 @@ class SingleTwoStageDetector176PRW(BaseDetector):
         outs_n = self.bbox_head(xn, proposals)
         bbox_list = self.bbox_head.get_bboxes(
             *outs_n, img_metas, rescale=rescale)
+
+        if bbox_list[0][0].shape[0] == 0:
+            return None, None
+
         # skip post-processing when exporting to ONNX
         if torch.onnx.is_in_onnx_export():
             return bbox_list
@@ -310,7 +314,8 @@ class SingleTwoStageDetector176PRW(BaseDetector):
 
         proposals = []
         #print('scale_factor')
-        #print(img_metas[0]['scale_factor'])
+        #print(img_metas[0]['scale_factor']) img_metas[0]['scale_factor']
+        # print('scale',img_metas.data[0][0]['scale_factor'])
         tmp_sf = torch.FloatTensor(np.append(img_metas[0]['scale_factor'], 1)).to('cuda')
         #print(tmp_sf)
         for det_bboxes, det_labels, reid_feats in bbox_list:

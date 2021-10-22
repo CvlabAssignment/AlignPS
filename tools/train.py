@@ -146,7 +146,10 @@ def main():
         set_random_seed(args.seed, deterministic=args.deterministic)
     cfg.seed = args.seed
     meta['seed'] = args.seed
-
+    # print('model', cfg.model)
+    # print('model2',cfg.train_cfg)
+    # print('model3',cfg.test_cfg)
+    # print('config model', cfg.model, type(cfg.model))
     model = build_detector(
         cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
 

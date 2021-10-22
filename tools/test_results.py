@@ -1,8 +1,11 @@
+import glob
+
 import cv2
 import os
 from scipy.io import loadmat
 import os.path as osp
 import numpy as np
+import torch
 import json
 from PIL import Image
 import pickle
@@ -56,27 +59,78 @@ def load_image_index(root_dir, db_name):
 if __name__ == "__main__":
     db_name = "psdb_test"
     # change to your own path
-    root_dir = '/home/yy1/2021/data/cuhk'
+    # root_dir = '/home/yy1/2021/data/cuhk'
+    root_dir ='~/Downloads/WRCAN-PyTorch/src/image'
 
-    with open(root_dir + '/annotation/test_new.json', 'r') as fid:
-        test_det = json.load(fid)
+    # with open(root_dir + '/annotation/test_new.json', 'r') as fid:
+    #     test_det = json.load(fid)
+
+    images_path = '/home/cvlab3/Downloads/WRCAN-PyTorch/src/image/'
+    # '/home/cvlab3/Downloads/WRCAN-PyTorch/src/images_x1/'
+  #  images_file_names = glob.glob(images_path + '*.jpeg')
+    image_file_names = os.listdir(images_path)
+
     id_to_img = dict()
     img_to_id = dict()
-    for td in test_det['images']:
-        im_name = td['file_name'].split('/')[-1]
-        im_id = td['id']
-        id_to_img[im_id] = im_name
-        img_to_id[im_name] = im_id
+
+    for idx,  f in enumerate(image_file_names):
+
+        _,frame_no = f.split("|")
+
+        file_name = f
+
+        id_to_img[idx] = file_name
+        img_to_id[file_name] = idx
+
+
+
+
+
+    # for f in images_file_names:
+    #     print(f)
+    #     f = f.split("/")
+    #     f = f[2].split("|")
+    #     print('this', f)
+    #     frame_no = int(f[1][:-5])
+    #     print(frame_no)
+    #     file_name = f[0]
+    #     print(file_name)
+    #     exit()
+
+
+        # print(f)
+        # im_name =
+        # im_id =
+        # id_to_img[] =
+        # img_to_id[] =
+
+    # for td in test_det['images']:
+    #     im_name = td['file_name'].split('/')[-1]
+    #     im_id = td['id']
+    #     id_to_img[im_id] = im_name
+    #     img_to_id[im_name] = im_id
+
+
 
     # change to your own working dirs
-    results_path = '/home/yy1/2021/AlignPS/work_dirs/' + sys.argv[1]
+   ##  print('this', results_path)
+
+    results_path = '/home/cvlab3/Downloads/AlignPS/work_dirs/faster_rcnn_r50_caffe_c4_1x_cuhk_single_two_stage17_6_nae1'
+
+
     #results_path = '/home/yy1/2021/mmdetection/work_dirs/fcos_center-normbbox-centeronreg-giou_r50_caffe_fpn_gn-head_dcn_4x4_1x_cuhk_reid_1500_stage1_fpncat_dcn_epoch24_singlescale_focal_x4_bg-2_lconv3dcn_sub_triqueue'
     #results_path = '/raid/yy1/mmdetection/work_dirs/fcos_center-normbbox-centeronreg-giou_r50_caffe_fpn_gn-head_4x4_1x_cuhk_reid_1000_fpncat'
-    with open(os.path.join(results_path, 'results_1000.pkl'), 'rb') as fid:
-        all_dets = pickle.load(fid)
+
+   # with open(os.path.join(results_path, 'results_1000.pkl'), 'rb') as fid:
+   #      all_dets = pickle.load(fid)
+
+   # path = os.path.join(results_path, 'cuhk_roi_alignps.pth')
+  #  all_dets= torch.load(path)
+
 
     gallery_dicts = {}
     for i, dets in enumerate(all_dets):
+        print(i, dets)
         image_id = i
         gallery_dicts[image_id] = dict()
         gallery_dicts[image_id]['bbox'] = dets[0][:, :4]
@@ -86,7 +140,7 @@ if __name__ == "__main__":
 
     all_thresh = [0.2]
     #iou_thresh = 0.6
-    #all_thresh = [0.05, 0.1, 0.15, 0.18, 0.2, 0.22, 0.25]
+    #all_thresh = [0.05, 0.1, 0.15, 0.18, 0.2, 0.22, 0.25
     #all_thresh = [0.15 + 0.01 * i for i in range(11)]
     for thresh in all_thresh:
         if db_name == "psdb_test":

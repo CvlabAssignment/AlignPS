@@ -1,6 +1,8 @@
 dataset_type = 'CuhkDataset'
 # change to you own path
-data_root = '/home/yy1/2021/data/cuhk/'
+data_root = '/home/cvlab3/Downloads/AlignPS/demo/anno/kist/'
+# /home/cvlab3/Downloads/AlignPS/demo/anno
+# '/home/yy1/2021/data/cuhk/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -30,23 +32,25 @@ test_pipeline = [
             dict(type='Collect', keys=['img']),
         ])
 ]
+data_name = 'images_x1_cam/'
 data = dict(
     samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotation/train_pid_new.json', # change to you own path
-        img_prefix=data_root + 'Image/SSM/',
+        ann_file=data_root + 'train_pid_new.json', # change to you own path
+        img_prefix='/home/cvlab3/Downloads/WRCAN-PyTorch/src/'+data_name,
+        # /home/cvlab3/Downloads/WRCAN-PyTorch/src/images data_root + 'Image/SSM/'
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotation/test_new.json', # change to you own path
-        img_prefix=data_root + 'Image/SSM/',
+        ann_file=data_root + 'test_new.json', # change to you own path
+        img_prefix='/home/cvlab3/Downloads/WRCAN-PyTorch/src/'+data_name,
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotation/test_new.json', # change to you own path
-        img_prefix=data_root + 'Image/SSM/',
-        proposal_file=data_root+'annotation/test/train_test/TestG50.mat',
+        ann_file=data_root + 'test_new.json', # change to you own path
+        img_prefix='/home/cvlab3/Downloads/WRCAN-PyTorch/src/'+data_name,
+        proposal_file=data_root+'TestG50.mat',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')

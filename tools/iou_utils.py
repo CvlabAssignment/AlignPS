@@ -35,36 +35,49 @@ def get_iou(pred_box, gt_box):
     return iou
 
 
-def get_max_iou(pred_boxes, gt_box):
+def get_max_iou(pred_boxes, gt_boxes):
     """
     calculate the iou multiple pred_boxes and 1 gt_box (the same one)
     pred_boxes: multiple predict  boxes coordinate
     gt_box: ground truth bounding  box coordinate
     return: the max overlaps about pred_boxes and gt_box
     """
-    # 1. calculate the inters coordinate
-    if pred_boxes.shape[0] > 0:
-        ixmin = np.maximum(pred_boxes[:, 0], gt_box[0])
-        ixmax = np.minimum(pred_boxes[:, 2], gt_box[2])
-        iymin = np.maximum(pred_boxes[:, 1], gt_box[1])
-        iymax = np.minimum(pred_boxes[:, 3], gt_box[3])
 
-        iw = np.maximum(ixmax - ixmin + 1., 0.)
-        ih = np.maximum(iymax - iymin + 1., 0.)
+    # print('pb 1', type(pred_boxes), pred_boxes[0:41][0])
+    tp_num = 0
+    # 1. calculate the inters coordinate
+
+    for boxes in pred_boxes:
+        for gt_box in gt_boxes:
+            gt_box = list(map(int, gt_box))
+
+            ixmin = np.maximum(boxes[0], gt_box[0])
+            ixmax = np.minimum(boxes[2], gt_box[2])
+            iymin = np.maximum(boxes[1], gt_box[1])
+            iymax = np.minimum(boxes[3], gt_box[3])
+
+
+            iw = np.maximum(abs(ixmax - ixmin) + 1., 0.)
+            ih = np.maximum(abs(iymax - iymin) + 1., 0.)
 
     # 2.calculate the area of inters
-        inters = iw * ih
+            inters = iw * ih
 
     # 3.calculate the area of union
-        uni = ((pred_boxes[:, 2] - pred_boxes[:, 0] + 1.) * (pred_boxes[:, 3] - pred_boxes[:, 1] + 1.) +
-               (gt_box[2] - gt_box[0] + 1.) * (gt_box[3] - gt_box[1] + 1.) -
-               inters)
+    #         uni = ((pred_boxes[:, 2] - pred_boxes[:, 0] + 1.) * (pred_boxes[:, 3] - pred_boxes[:, 1] + 1.) +
+    #            (gt_box[2] - gt_box[0] + 1.) * (gt_box[3] - gt_box[1] + 1.) -inters)
+            uni = ((boxes[2] - boxes[0] + 1.) * (boxes[3] - boxes[1] + 1.) +
+                              (gt_box[2] - gt_box[0] + 1.) * (gt_box[3] - gt_box[1] + 1.) - inters)
 
-    # 4.calculate the overlaps and find the max overlap ,the max overlaps index for pred_box
-        iou = inters / uni
-        iou_max = np.max(iou)
-        nmax = np.argmax(iou)
-        return iou, iou_max, nmax
+            # print('uni', uni)
+            # print(inters)
+
+            iou = inters / uni
+            # print('iou',iou)
+            if iou > 0.55:
+                tp_num += 1
+
+    return tp_num
 
 def get_good_iou(pred_boxes, gt_box, thresh):
     """

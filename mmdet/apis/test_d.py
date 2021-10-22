@@ -27,6 +27,10 @@ def single_gpu_test_d(model,
         with torch.no_grad():
             result1, result2 = model(return_loss=False, rescale=True, **data)
 
+        if result1 is None:
+            print('failed %d\n' % i)
+            continue
+
         batch_size = len(result2)
         if show or out_dir:
             if batch_size == 1 and isinstance(data['img'][0], torch.Tensor):
@@ -101,6 +105,7 @@ def multi_gpu_test_d(model, data_loader, tmpdir=None, gpu_collect=False):
     for i, data in enumerate(data_loader):
         with torch.no_grad():
             result1, result2 = model(return_loss=False, rescale=True, **data)
+            print('r', type(result1), results1)
             # encode mask results
             #if isinstance(result[0], tuple):
             #    result = [(bbox_results, encode_mask_results(mask_results))

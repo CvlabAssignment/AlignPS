@@ -20,9 +20,9 @@ from mmdet.models import build_detector
 def parse_args():
     parser = argparse.ArgumentParser(
         description='MMDet test (and eval) a model')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
-    parser.add_argument('--out', help='output result file in pickle format')
+    parser.add_argument('--config', default='../configs/person_search/faster_rcnn_r50_caffe_c4_1x_cuhk_single_two_stage17_6_nae1.py', help='test config file path')
+    parser.add_argument('--checkpoint', default='../work_dirs/faster_rcnn_r50_caffe_c4_1x_cuhk_single_two_stage17_6_nae1/cuhk_roi_alignps.pth', help='checkpoint file')
+    parser.add_argument('--out', default='../work_dirs/faster_rcnn_r50_caffe_c4_1x_cuhk_single_two_stage17_6_nae1/results_1000_x1.pkl', help='output result file in pickle format')
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -109,8 +109,9 @@ def main():
 
     if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
         raise ValueError('The output file must be a pkl file.')
-
+    # print('config',args.config)
     cfg = Config.fromfile(args.config)
+    # print('cfg', cfg)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
     # import modules from string list.
@@ -149,8 +150,11 @@ def main():
     samples_per_gpu = cfg.data.test.pop('samples_per_gpu', 1)
     if samples_per_gpu > 1:
         # Replace 'ImageToTensor' to 'DefaultFormatBundle'
+
         cfg.data.test.pipeline = replace_ImageToTensor(cfg.data.test.pipeline)
+    # print(cfg.data.test)
     dataset = build_dataset(cfg.data.test)
+
     #dataset.load_query()
     data_loader = build_dataloader(
         dataset,
@@ -159,11 +163,13 @@ def main():
         dist=distributed,
         shuffle=False)
 
+
     # build the model and load checkpoint
     model = build_detector(cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
+    # print('checkpoints', args.checkpoint)
     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
